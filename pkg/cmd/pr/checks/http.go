@@ -11,6 +11,7 @@ import (
 type checkRun struct {
 	Name    string
 	Status  string
+	Link    string
 	Elapsed time.Duration
 }
 
@@ -41,9 +42,32 @@ func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (
 		return list, err
 	}
 
-	for _, checkRun := range response.CheckRuns {
-		elapsed := checkRun.CompletedAt.Sub(checkRun.StartedAt)
-		fmt.Printf("%s %s %s %s\n", checkRun.Name, checkRun.Status, checkRun.Conclusion, elapsed)
+	for _, cr := range response.CheckRuns {
+		elapsed := cr.CompletedAt.Sub(cr.StartedAt)
+
+		run := checkRun{
+			Elapsed: elapsed,
+			Name:    cr.Name,
+			Link:    cr.HtmlUrl,
+		}
+
+		if cr.Status == "in_progress" || cr.Status == "queued" {
+			list.Pending++
+			run.Status = "pending"
+		} else if cr.Status == "completed" {
+			switch cr.Conclusion {
+			case "neutral", "success":
+				list.Passing++
+				run.Status = "pass"
+			case "canceled", "timed_out", "failed":
+				list.Failing++
+				run.Status = "fail"
+			}
+		} else {
+			panic(fmt.Errorf("unsupported status: %q", cr.Status))
+		}
+
+		list.checkRuns = append(list.checkRuns, run)
 	}
 
 	return list, nil
