@@ -77,16 +77,17 @@ func checksRun(opts *ChecksOptions) error {
 	// TODO nontty output
 	// TODO print summary header
 	// TODO use table printer
+	// TODO handle elapsed overflow
 
 	for _, cr := range runList.CheckRuns {
 		var mark string
 		switch cr.Status {
 		case "pending":
-			mark = utils.Yellow("•")
+			mark = utils.YellowDot()
 		case "pass":
 			mark = utils.GreenCheck()
 		case "fail":
-			mark = utils.Red("X")
+			mark = utils.RedX()
 		}
 
 		fmt.Printf("%s\t%s\t%s\t%s\n",

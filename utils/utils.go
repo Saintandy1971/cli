@@ -118,3 +118,11 @@ func DisplayURL(urlStr string) string {
 func GreenCheck() string {
 	return Green("✓")
 }
+
+func YellowDot() string {
+	return Yellow("•")
+}
+
+func RedX() string {
+	return Red("X")
+}
