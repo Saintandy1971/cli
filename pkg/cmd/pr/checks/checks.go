@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/cli/cli/api"
@@ -9,6 +10,7 @@ import (
 	"github.com/cli/cli/pkg/cmd/pr/shared"
 	"github.com/cli/cli/pkg/cmdutil"
 	"github.com/cli/cli/pkg/iostreams"
+	"github.com/cli/cli/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -67,14 +69,34 @@ func checksRun(opts *ChecksOptions) error {
 		return err
 	}
 
-	_, err = checkRuns(apiClient, repo, pr)
+	runList, err := checkRuns(apiClient, repo, pr)
 	if err != nil {
 		return err
 	}
 
-	// TODO checks query
+	// TODO nontty output
+	// TODO print summary header
+	// TODO use table printer
 
-	// TODO checks formatting
+	for _, cr := range runList.CheckRuns {
+		var mark string
+		switch cr.Status {
+		case "pending":
+			mark = utils.Yellow("•")
+		case "pass":
+			mark = utils.GreenCheck()
+		case "fail":
+			mark = utils.Red("X")
+		}
+
+		fmt.Printf("%s\t%s\t%s\t%s\n",
+			mark,
+			cr.Name,
+			cr.Elapsed,
+			cr.Link,
+		)
+
+	}
 
 	return nil
 }

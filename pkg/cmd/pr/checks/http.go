@@ -19,7 +19,7 @@ type checkRunList struct {
 	Passing   int
 	Failing   int
 	Pending   int
-	checkRuns []checkRun
+	CheckRuns []checkRun
 }
 
 func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (checkRunList, error) {
@@ -55,11 +55,12 @@ func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (
 			list.Pending++
 			run.Status = "pending"
 		} else if cr.Status == "completed" {
+			// TODO stale?
 			switch cr.Conclusion {
-			case "neutral", "success":
+			case "neutral", "success", "skipped":
 				list.Passing++
 				run.Status = "pass"
-			case "canceled", "timed_out", "failed":
+			case "cancelled", "timed_out", "failure", "action_required":
 				list.Failing++
 				run.Status = "fail"
 			}
@@ -67,7 +68,7 @@ func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (
 			panic(fmt.Errorf("unsupported status: %q", cr.Status))
 		}
 
-		list.checkRuns = append(list.checkRuns, run)
+		list.CheckRuns = append(list.CheckRuns, run)
 	}
 
 	return list, nil
