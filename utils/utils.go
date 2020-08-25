@@ -121,8 +121,8 @@ func GreenCheck() string {
 
 func YellowDot() string {
 	// TODO
-	//return Yellow("•") // this had spacing issues; switched to Middle Dot
-	return Yellow("·")
+	//return Yellow("•") // this had spacing issues
+	return Yellow(".")
 }
 
 func RedX() string {
