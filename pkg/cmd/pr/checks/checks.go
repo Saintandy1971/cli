@@ -42,6 +42,10 @@ func NewCmdChecks(f *cmdutil.Factory, runF func(*ChecksOptions) error) *cobra.Co
 			// support `-R, --repo` override
 			opts.BaseRepo = f.BaseRepo
 
+			if len(args) > 0 {
+				opts.SelectorArg = args[0]
+			}
+
 			if runF != nil {
 				return runF(opts)
 			}
