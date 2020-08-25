@@ -75,9 +75,6 @@ func checksRun(opts *ChecksOptions) error {
 		return err
 	}
 
-	// TODO print summary header
-	// TODO handle elapsed overflow
-
 	tp := utils.NewTablePrinter(opts.IO)
 
 	for _, cr := range runList.CheckRuns {
@@ -111,6 +108,9 @@ func checksRun(opts *ChecksOptions) error {
 		tp.EndRow()
 	}
 
+	fmt.Fprintln(opts.IO.Out, runList.Summary())
+	fmt.Fprintln(opts.IO.Out)
+
 	return tp.Render()
 }
 
@@ -126,4 +126,30 @@ type checkRunList struct {
 	Failing   int
 	Pending   int
 	CheckRuns []checkRun
+}
+
+func (runList *checkRunList) Summary() string {
+	fails := runList.Failing
+	passes := runList.Passing
+	pending := runList.Pending
+
+	if fails+passes+pending == 0 {
+		return ""
+	}
+
+	summary := ""
+
+	if runList.Failing > 0 {
+		summary = "Some checks were not successful"
+	} else if runList.Pending > 0 {
+		summary = "Some checks are still pending"
+	} else {
+		summary = "All checks were successful"
+	}
+
+	tallies := fmt.Sprintf(
+		"%d failing, %d successful, and %d pending checks",
+		fails, passes, pending)
+
+	return fmt.Sprintf("%s\n%s", utils.Bold(summary), tallies)
 }

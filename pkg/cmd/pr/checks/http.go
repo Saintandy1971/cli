@@ -8,7 +8,7 @@ import (
 	"github.com/cli/cli/internal/ghrepo"
 )
 
-func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (checkRunList, error) {
+func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (*checkRunList, error) {
 	list := checkRunList{}
 	path := fmt.Sprintf("repos/%s/%s/commits/%s/check-runs",
 		repo.RepoOwner(), repo.RepoName(), pr.Commits.Nodes[0].Commit.Oid)
@@ -25,7 +25,7 @@ func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (
 
 	err := client.REST(repo.RepoHost(), "GET", path, nil, &response)
 	if err != nil {
-		return list, err
+		return nil, err
 	}
 
 	for _, cr := range response.CheckRuns {
@@ -57,5 +57,5 @@ func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (
 		list.CheckRuns = append(list.CheckRuns, run)
 	}
 
-	return list, nil
+	return &list, nil
 }
