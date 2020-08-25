@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cli/cli/api"
 	"github.com/cli/cli/context"
@@ -74,10 +75,10 @@ func checksRun(opts *ChecksOptions) error {
 		return err
 	}
 
-	// TODO nontty output
 	// TODO print summary header
-	// TODO use table printer
 	// TODO handle elapsed overflow
+
+	tp := utils.NewTablePrinter(opts.IO)
 
 	for _, cr := range runList.CheckRuns {
 		var mark string
@@ -90,14 +91,39 @@ func checksRun(opts *ChecksOptions) error {
 			mark = utils.RedX()
 		}
 
-		fmt.Printf("%s\t%s\t%s\t%s\n",
-			mark,
-			cr.Name,
-			cr.Elapsed,
-			cr.Link,
-		)
+		elapsed := fmt.Sprintf("%s", cr.Elapsed)
+		if cr.Elapsed < 0 {
+			elapsed = "0"
+		}
 
+		if opts.IO.IsStdoutTTY() {
+			tp.AddField(mark, nil, nil)
+			tp.AddField(cr.Name, nil, nil)
+			tp.AddField(elapsed, nil, nil)
+			tp.AddField(cr.Link, nil, nil)
+		} else {
+			tp.AddField(cr.Name, nil, nil)
+			tp.AddField(cr.Status, nil, nil)
+			tp.AddField(elapsed, nil, nil)
+			tp.AddField(cr.Link, nil, nil)
+		}
+
+		tp.EndRow()
 	}
 
-	return nil
+	return tp.Render()
+}
+
+type checkRun struct {
+	Name    string
+	Status  string
+	Link    string
+	Elapsed time.Duration
+}
+
+type checkRunList struct {
+	Passing   int
+	Failing   int
+	Pending   int
+	CheckRuns []checkRun
 }

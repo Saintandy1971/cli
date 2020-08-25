@@ -8,20 +8,6 @@ import (
 	"github.com/cli/cli/internal/ghrepo"
 )
 
-type checkRun struct {
-	Name    string
-	Status  string
-	Link    string
-	Elapsed time.Duration
-}
-
-type checkRunList struct {
-	Passing   int
-	Failing   int
-	Pending   int
-	CheckRuns []checkRun
-}
-
 func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (checkRunList, error) {
 	list := checkRunList{}
 	path := fmt.Sprintf("repos/%s/%s/commits/%s/check-runs",
