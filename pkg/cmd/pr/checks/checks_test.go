@@ -2,8 +2,10 @@ package checks
 
 import (
 	"bytes"
+	"net/http"
 	"testing"
 
+	"github.com/cli/cli/internal/ghrepo"
 	"github.com/cli/cli/pkg/cmdutil"
 	"github.com/cli/cli/pkg/httpmock"
 	"github.com/cli/cli/pkg/iostreams"
@@ -62,19 +64,66 @@ func TestNewCmdChecks(t *testing.T) {
 func Test_checksRun_tty(t *testing.T) {
 	tests := []struct {
 		name    string
-		http    func(*httpmock.Registry)
+		payload checkRunsPayload
+		stubs   func(*httpmock.Registry)
 		wantOut string
 	}{
+		{
+			name: "no commits",
+			stubs: func(reg *httpmock.Registry) {
+				reg.StubResponse(200, bytes.NewBufferString(`
+					{ "data": { "repository": {
+						"pullRequest": { "number": 123 }
+					} } }
+				`))
+			},
+		},
+		{
+			name: "no checks",
+			payload: checkRunsPayload{
+				CheckRuns: []checkRunPayload{},
+			},
+		},
 		// TODO some failing
 		// TODO some pending
 		// TODO all passing
-		// TODO no checks
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// TODO
+			// TODO extract to runCommand
+			io, _, stdout, _ := iostreams.Test()
+			io.SetStdoutTTY(true)
 
+			opts := &ChecksOptions{
+				IO: io,
+				BaseRepo: func() (ghrepo.Interface, error) {
+					return ghrepo.New("OWNER", "REPO"), nil
+				},
+				SelectorArg: "123",
+			}
+
+			reg := &httpmock.Registry{}
+			if tt.stubs != nil {
+				tt.stubs(reg)
+			} else {
+				reg.StubResponse(200, bytes.NewBufferString(`
+				{ "data": { "repository": {
+					"pullRequest": { "number": 123, "commits": { "nodes": [{"commit": {"oid": "abc"}}]} }
+				} } }
+			`))
+			}
+			reg.Register(httpmock.REST("GET", "repos/OWNER/REPO/commits/abc/check-runs"),
+				httpmock.JSONResponse(tt.payload))
+
+			opts.HttpClient = func() (*http.Client, error) {
+				return &http.Client{Transport: reg}, nil
+			}
+
+			err := checksRun(opts)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tt.wantOut, stdout.String())
 		})
 	}
 }
@@ -87,6 +136,7 @@ func Test_checksRun_nontty(t *testing.T) {
 	}{
 		// TODO some checks
 		// TODO no checks
+		// TODO no commits
 	}
 
 	for _, tt := range tests {

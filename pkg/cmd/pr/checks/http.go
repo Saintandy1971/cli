@@ -8,20 +8,29 @@ import (
 	"github.com/cli/cli/internal/ghrepo"
 )
 
+type checkRunPayload struct {
+	Name        string
+	Status      string
+	Conclusion  string
+	StartedAt   time.Time `json:"started_at"`
+	CompletedAt time.Time `json:"completed_at"`
+	HtmlUrl     string    `json:"html_url"`
+}
+
+type checkRunsPayload struct {
+	CheckRuns []checkRunPayload `json:"check_runs"`
+}
+
 func checkRuns(client *api.Client, repo ghrepo.Interface, pr *api.PullRequest) (*checkRunList, error) {
 	list := checkRunList{}
+
+	if len(pr.Commits.Nodes) == 0 {
+		return &list, nil
+	}
+
 	path := fmt.Sprintf("repos/%s/%s/commits/%s/check-runs",
 		repo.RepoOwner(), repo.RepoName(), pr.Commits.Nodes[0].Commit.Oid)
-	var response struct {
-		CheckRuns []struct {
-			Name        string
-			Status      string
-			Conclusion  string
-			StartedAt   time.Time `json:"started_at"`
-			CompletedAt time.Time `json:"completed_at"`
-			HtmlUrl     string    `json:"html_url"`
-		} `json:"check_runs"`
-	}
+	var response checkRunsPayload
 
 	err := client.REST(repo.RepoHost(), "GET", path, nil, &response)
 	if err != nil {

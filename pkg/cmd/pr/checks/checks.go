@@ -79,6 +79,10 @@ func checksRun(opts *ChecksOptions) error {
 		return err
 	}
 
+	if len(runList.CheckRuns) == 0 {
+		return nil
+	}
+
 	tp := utils.NewTablePrinter(opts.IO)
 
 	for _, cr := range runList.CheckRuns {
