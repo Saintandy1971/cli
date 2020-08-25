@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cli/cli/pkg/cmdutil"
+	"github.com/cli/cli/pkg/httpmock"
 	"github.com/cli/cli/pkg/iostreams"
 	"github.com/google/shlex"
 	"github.com/stretchr/testify/assert"
@@ -54,6 +55,44 @@ func TestNewCmdChecks(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.Equal(t, tt.wants.SelectorArg, gotOpts.SelectorArg)
+		})
+	}
+}
+
+func Test_checksRun_tty(t *testing.T) {
+	tests := []struct {
+		name    string
+		http    func(*httpmock.Registry)
+		wantOut string
+	}{
+		// TODO some failing
+		// TODO some pending
+		// TODO all passing
+		// TODO no checks
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO
+
+		})
+	}
+}
+
+func Test_checksRun_nontty(t *testing.T) {
+	tests := []struct {
+		name    string
+		http    func(*httpmock.Registry)
+		wantOut string
+	}{
+		// TODO some checks
+		// TODO no checks
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO
+
 		})
 	}
 }
